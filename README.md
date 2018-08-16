@@ -1,6 +1,13 @@
 # react-native-popup
 
-Popup control that can show above/below the trigger button. Tapping outside closes the popup.
+Popup control that can:
+ 
+- [x] show above/below the trigger button
+- [x] close when tapped outside the popup content
+- [x] align to the center of the trigger button when possible and adjust when at window edges
+- [x] adapt and adjust based on change in orientation at runtime
+- [x] work with a simple API
+
 
 ## API and Usage
 

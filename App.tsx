@@ -37,7 +37,7 @@ export default class App extends Component<{}, State> {
                             marginBottom: 20,
                         }}
                         arrowColor={'black'}
-                        anchor={'up'}
+                        anchor={'down'}
                         renderContent={this.renderPopupBody}
                         isOpen={this.state.visible && this.state.index === x}
                         onPress={() => this.togglePopup(x)}

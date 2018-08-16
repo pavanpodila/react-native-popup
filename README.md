@@ -108,3 +108,7 @@ const styles = StyleSheet.create({
 ## Popup anchored up
 
 ![Up](_screenshots/up.png)
+
+## With Orientation changes
+
+![Up](_screenshots/popup.gif)

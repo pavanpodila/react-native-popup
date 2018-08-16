@@ -1,0 +1,3 @@
+rootProject.name = 'RNPopup'
+
+include ':app'

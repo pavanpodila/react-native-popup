@@ -6,6 +6,8 @@ type State = {
     visible: boolean;
     index: number;
 };
+const items = new Array(30).fill(0).map((x, index) => index);
+console.log(items);
 export default class App extends Component<{}, State> {
     public state = {
         visible: false,
@@ -24,7 +26,7 @@ export default class App extends Component<{}, State> {
                     },
                 ]}
             >
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(x => (
+                {items.map(x => (
                     <PopupButton
                         key={x}
                         style={{
@@ -34,14 +36,16 @@ export default class App extends Component<{}, State> {
                             width: '30%',
                             marginBottom: 20,
                         }}
+                        arrowColor={'black'}
+                        anchor={'down'}
                         renderContent={this.renderPopupBody}
-                        visible={this.state.visible && this.state.index === x}
+                        isOpen={this.state.visible && this.state.index === x}
                         onPress={() => this.togglePopup(x)}
                         onClose={() => this.togglePopup(x)}
-                        containerStyle={{
+                        contentStyle={{
                             width: '80%',
-                            height: '100%',
-                            backgroundColor: 'gray',
+                            height: '50%',
+                            backgroundColor: 'lightgray',
                         }}
                     >
                         <Text>Open</Text>
@@ -55,6 +59,7 @@ export default class App extends Component<{}, State> {
         return (
             <View
                 style={{
+                    flex: 1,
                     flexDirection: 'column',
                     justifyContent: 'space-between',
                 }}

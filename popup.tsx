@@ -7,25 +7,33 @@ import {
     LayoutChangeEvent,
     LayoutRectangle,
     Dimensions,
+    StyleSheet,
+    StyleProp,
 } from 'react-native';
 
+const ArrowSize = 10;
+
 interface Props {
-    visible: boolean;
+    isOpen: boolean;
     children: React.ReactNode;
     renderContent: () => React.ReactNode;
     style?: ViewStyle;
-    containerStyle?: ViewStyle;
+    contentStyle?: ViewStyle;
+    arrowColor: string;
     onClose: () => void;
     onPress: () => void;
+    anchor: 'up' | 'down';
 }
 interface State {
     contentLayout: LayoutRectangle;
 }
 export class PopupButton extends React.Component<Props, State> {
     private triggerElt?: React.ReactNode;
-    private arrowOffset = {
+    private triggerFrame: LayoutRectangle = {
         x: 0,
         y: 0,
+        width: 0,
+        height: 0,
     };
 
     public state = {
@@ -41,11 +49,12 @@ export class PopupButton extends React.Component<Props, State> {
         const {
             children,
             renderContent,
-            visible,
-            containerStyle,
+            isOpen,
+            contentStyle,
             style,
             onClose,
             onPress,
+            arrowColor,
         } = this.props;
 
         return (
@@ -59,46 +68,34 @@ export class PopupButton extends React.Component<Props, State> {
                     {children}
                 </TouchableOpacity>
                 <Modal
-                    visible={visible}
+                    visible={isOpen}
                     transparent={true}
                     supportedOrientations={['landscape', 'portrait']}
                 >
                     <View
                         style={{
-                            flexDirection: 'column',
                             flex: 1,
                         }}
                     >
-                        <TouchableOpacity
-                            onPress={onClose}
-                            style={{
-                                position: 'absolute',
-                                left: 0,
-                                right: 0,
-                                bottom: 0,
-                                top: 0,
-                            }}
-                        />
-                        <View>
-                            <Arrow
-                                style={{
-                                    top: this.arrowOffset.y,
-                                    left: this.arrowOffset.x - ArrowSize,
-                                }}
-                            />
-                        </View>
+                        <Backdrop onPress={onClose} />
                         <View
                             onLayout={this.onContentLayout}
                             style={[
-                                containerStyle,
-                                {
-                                    left: this.calculateContentOffset(),
-                                    top: this.arrowOffset.y,
-                                },
+                                contentStyle,
+                                { position: 'absolute' },
+                                this.calculateContentOffset(),
                             ]}
                         >
                             {renderContent()}
                         </View>
+
+                        <Arrow
+                            style={[
+                                { position: 'absolute' },
+                                this.calculateArrowOffset(),
+                                this.calculateArrowShape(),
+                            ]}
+                        />
                     </View>
                 </Modal>
             </Fragment>
@@ -107,13 +104,9 @@ export class PopupButton extends React.Component<Props, State> {
 
     onTriggerContainerLayout = (event: LayoutChangeEvent) => {
         const { layout } = event.nativeEvent;
-        this.arrowOffset = {
-            x: layout.x + layout.width / 2,
-            y: layout.y + layout.height,
-        };
+        this.triggerFrame = layout;
 
-        console.log(this.arrowOffset);
-        if (this.props.visible) {
+        if (this.props.isOpen) {
             this.forceUpdate();
         }
     };
@@ -126,39 +119,119 @@ export class PopupButton extends React.Component<Props, State> {
     };
 
     private calculateContentOffset() {
-        const { width: contentWidth } = this.state.contentLayout;
+        const {
+            width: contentWidth,
+            height: contentHeight,
+        } = this.state.contentLayout;
         const windowWidth = Dimensions.get('window').width;
-        let idealOffset = this.arrowOffset.x - contentWidth / 2;
+        let xOffset =
+            this.triggerFrame.x +
+            this.triggerFrame.width / 2 -
+            contentWidth / 2;
 
-        if (idealOffset + contentWidth > windowWidth) {
-            idealOffset -= idealOffset + contentWidth - windowWidth;
+        if (xOffset + contentWidth > windowWidth) {
+            xOffset -= xOffset + contentWidth - windowWidth;
         }
 
-        if (idealOffset < 0) {
-            idealOffset = 0;
+        if (xOffset < 0) {
+            xOffset = 0;
         }
 
-        return idealOffset;
+        let yOffset = 0;
+        switch (this.props.anchor) {
+            case 'down':
+                yOffset =
+                    this.triggerFrame.y + this.triggerFrame.height + ArrowSize;
+                break;
+
+            case 'up':
+                yOffset = this.triggerFrame.y - ArrowSize - contentHeight;
+                break;
+        }
+
+        return { left: xOffset, top: yOffset };
+    }
+
+    private calculateArrowOffset() {
+        const { x, y, width, height } = this.triggerFrame;
+        switch (this.props.anchor) {
+            case 'down':
+                return [
+                    {
+                        top: y + height,
+                        left: x + width / 2 - ArrowSize,
+                    },
+                    arrowStyles.up(ArrowSize, this.props.arrowColor),
+                ];
+
+            case 'up':
+                return [
+                    {
+                        top: y - ArrowSize,
+                        left: x + width / 2 - ArrowSize,
+                    },
+                    arrowStyles.down(ArrowSize, this.props.arrowColor),
+                ];
+        }
+    }
+
+    private calculateArrowShape() {
+        switch (this.props.anchor) {
+            case 'down':
+                return arrowStyles.up(ArrowSize, this.props.arrowColor);
+
+            case 'up':
+                return arrowStyles.down(ArrowSize, this.props.arrowColor);
+        }
     }
 }
 
-const ArrowSize = 10;
-function Arrow({ style }: { style: ViewStyle }) {
+interface ArrowProps {
+    style: StyleProp<ViewStyle>;
+}
+function Arrow({ style }: ArrowProps) {
+    return <View style={style} />;
+}
+
+function Backdrop({ onPress }: { onPress: () => void }) {
     return (
-        <View
-            style={[
-                style,
-                {
-                    borderLeftColor: 'transparent',
-                    borderLeftWidth: ArrowSize,
-                    borderRightWidth: ArrowSize,
-                    borderRightColor: 'transparent',
-                    borderBottomColor: 'red',
-                    borderBottomWidth: ArrowSize,
-                    width: 0,
-                    height: 0,
-                },
-            ]}
+        <TouchableOpacity
+            onPress={onPress}
+            style={{
+                position: 'absolute',
+                left: 0,
+                right: 0,
+                bottom: 0,
+                top: 0,
+            }}
         />
     );
 }
+
+const arrowStyles = {
+    up(size: number, color: string) {
+        return {
+            borderLeftColor: 'transparent',
+            borderLeftWidth: size,
+            borderRightWidth: size,
+            borderRightColor: 'transparent',
+            borderBottomColor: color,
+            borderBottomWidth: size,
+            width: 0,
+            height: 0,
+        };
+    },
+
+    down(size: number, color: string) {
+        return {
+            borderLeftColor: 'transparent',
+            borderLeftWidth: size,
+            borderRightWidth: size,
+            borderRightColor: 'transparent',
+            borderTopColor: color,
+            borderTopWidth: size,
+            width: 0,
+            height: 0,
+        };
+    },
+};

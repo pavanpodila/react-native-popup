@@ -9,6 +9,8 @@ import {
     Dimensions,
     StyleSheet,
     StyleProp,
+    UIManager,
+    findNodeHandle,
 } from 'react-native';
 
 const ArrowSize = 10;
@@ -62,7 +64,7 @@ export class PopupButton extends React.Component<Props, State> {
                 <TouchableOpacity
                     ref={elt => (this.triggerElt = elt)}
                     onPress={onPress}
-                    onLayout={this.onTriggerContainerLayout}
+                    // onLayout={this.onTriggerContainerLayout}
                     style={style}
                 >
                     {children}
@@ -102,6 +104,13 @@ export class PopupButton extends React.Component<Props, State> {
         );
     }
 
+    public componentDidMount() {
+        console.log(findNodeHandle(this.triggerElt!));
+        UIManager.measure(findNodeHandle(this.triggerElt!), (...args) => {
+            console.log(args);
+        });
+    }
+
     onTriggerContainerLayout = (event: LayoutChangeEvent) => {
         const { layout } = event.nativeEvent;
         this.triggerFrame = layout;
@@ -114,8 +123,6 @@ export class PopupButton extends React.Component<Props, State> {
     onContentLayout = (event: LayoutChangeEvent) => {
         const { layout } = event.nativeEvent;
         this.setState({ contentLayout: layout });
-
-        console.log(layout);
     };
 
     private calculateContentOffset() {

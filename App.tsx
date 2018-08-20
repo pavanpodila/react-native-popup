@@ -1,18 +1,22 @@
 import React, { Component } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, NativeModules } from 'react-native';
 import { PopupButton } from './popup';
 
 type State = {
     visible: boolean;
     index: number;
+    height: number;
 };
 const items = new Array(30).fill(0).map((x, index) => index);
-console.log(items);
+console.log({ NativeModules });
 export default class App extends Component<{}, State> {
     public state = {
         visible: false,
         index: -1,
+        height: 50,
     };
+
+    private timer: number = 0;
 
     render() {
         return (
@@ -43,7 +47,7 @@ export default class App extends Component<{}, State> {
                         onPress={() => this.togglePopup(x)}
                         onClose={() => this.togglePopup(x)}
                         contentStyle={{
-                            width: '80%',
+                            width: `${this.state.height}%`,
                             height: '50%',
                             backgroundColor: 'lightgray',
                         }}
@@ -53,6 +57,17 @@ export default class App extends Component<{}, State> {
                 ))}
             </View>
         );
+    }
+    public componentDidMount() {
+        // this.timer = setInterval(() => {
+        //     this.setState({ height: (this.state.height + 19) % 70 });
+        // }, 1000);
+    }
+
+    public componentWillUnmount() {
+        if (this.timer) {
+            clearInterval(this.timer);
+        }
     }
 
     renderPopupBody = () => {
